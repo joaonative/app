@@ -138,8 +138,8 @@ export default function MovieScreen() {
 
         {/* genres */}
         <View className="flex-row justify-center mx-4 space-x-2">
-          {movie?.genres?.map((genre, index) => {
-            let showDot = index + 1 != movie.genres.lenght;
+          {movie?.genres?.slice(0, 3).map((genre, index) => {
+            let showDot = index < movie.genres.length - 1;
             return (
               <Text
                 className="text-neutral-400 font-semibold text-base text-center"

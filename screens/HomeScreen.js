@@ -66,7 +66,7 @@ export default function HomeScreen() {
           <Bars3CenterLeftIcon size={32} strokeWidth={2} color={"#FFF"} />
           <Text className="text-white text-2xl font-bold">
             <Text style={styles.text}>L</Text>
-            enda <Text style={styles.text}>M</Text>
+            orem <Text style={styles.text}>M</Text>
             ovies
           </Text>
           <TouchableOpacity onPress={() => navigation.navigate("Search")}>
