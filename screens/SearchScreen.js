@@ -8,21 +8,46 @@ import {
   TouchableWithoutFeedback,
   Image,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { XMarkIcon } from "react-native-heroicons/outline";
 import { useNavigation } from "@react-navigation/native";
-
+import Loading from "../components/loading";
+import { debounce } from "lodash";
+import { fallBackMoviePoster, image185, searchMovies } from "../api/moviedb";
 var { width, height } = Dimensions.get("window");
 
 export default function SearchScreen() {
   const navigation = useNavigation();
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   let movieName = "Avengers EndGame";
+
+  const handleSearch = (value) => {
+    if (value && value.length > 2) {
+      setLoading(true);
+      searchMovies({
+        query: value,
+        include_adult: "false",
+        language: "en-US",
+        page: "1",
+      }).then((data) => {
+        setLoading(false);
+        // console.log("movies_founded:", data);
+        if (data && data.results) setResults(data.results);
+      });
+    } else {
+      setLoading(false);
+      setResults([]);
+    }
+  };
+
+  const handleTextDeBounce = useCallback(debounce(handleSearch, 400), []);
   return (
     <SafeAreaView className="bg-neutral-800 flex-1">
       <View className="mx-4 flex-row justify-between items-center  border border-neutral-500 rounded-full">
         <TextInput
+          onChangeText={handleTextDeBounce}
           placeholder="Search Movies"
           placeholderTextColor={"lightgrey"}
           className="pb-1 pl-6 flex-1 text-base font-semibold text-white tracking-wider"
@@ -38,8 +63,9 @@ export default function SearchScreen() {
       </View>
 
       {/* api results */}
-
-      {results.length > 0 ? (
+      {loading ? (
+        <Loading />
+      ) : results.length > 0 ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 15 }}
@@ -58,13 +84,16 @@ export default function SearchScreen() {
                   <View className="space-y-2 mb-4">
                     <Image
                       className="rounded-3xl"
-                      source={require("../assets/images/moviePoster2.png")}
+                      //source={require("../assets/images/moviePoster2.png")}
+                      source={{
+                        uri: image185(item?.poster_path) || fallBackMoviePoster,
+                      }}
                       style={{ width: width * 0.44, height: height * 0.3 }}
                     />
                     <Text className="text-neutral-300 ml-1">
-                      {movieName.length > 22
-                        ? movieName.slice(0, 22) + "..."
-                        : movieName}
+                      {item.title.length > 22
+                        ? item.title.slice(0, 22) + "..."
+                        : item.title}
                     </Text>
                   </View>
                 </TouchableWithoutFeedback>

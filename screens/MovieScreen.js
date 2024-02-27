@@ -17,6 +17,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { styles, theme } from "../theme";
 import Cast from "../components/cast";
 import MovieList from "../components/movieList";
+import Loading from "../components/loading";
+import {
+  fallBackMoviePoster,
+  fetchMovieCredits,
+  fetchMovieDetails,
+  fetchSimilarMovies,
+  image500,
+} from "../api/moviedb";
 
 var { width, height } = Dimensions.get("window");
 const ios = Platform.OS === "ios";
@@ -28,11 +36,38 @@ export default function MovieScreen() {
   const { params: item } = useRoute();
   const [isFavourite, toogleFavourite] = useState(false);
   const navigation = useNavigation();
-  const [cast, setCast] = useState([1, 2, 3, 4, 5]);
-  const [similarMovies, setSimilarMovies] = useState([1, 2, 3, 4, 5]);
+  const [cast, setCast] = useState([]);
+  const [similarMovies, setSimilarMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [movie, setMovie] = useState({});
+
   useEffect(() => {
-    //call movie details api
+    //console.log("itemid:", item.id);
+    setLoading(true);
+    getMovieDetails(item.id);
+    getMovieCredits(item.id);
+    getSimilarMovies(item.id);
   }, [item]);
+
+  const getMovieDetails = async (id) => {
+    const data = await fetchMovieDetails(id);
+    //console.log("movie_details:", data);
+    if (data) setMovie(data);
+    setLoading(false);
+  };
+
+  const getMovieCredits = async (id) => {
+    const data = await fetchMovieCredits(id);
+    //console.log("movie_credits:", data);
+    if (data && data.cast) setCast(data.cast);
+  };
+
+  const getSimilarMovies = async (id) => {
+    const data = await fetchSimilarMovies(id);
+    //console.log("similar_movies:", data);
+    if (data && data.results) setSimilarMovies(data.results);
+  };
+
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: 20 }}
@@ -60,57 +95,65 @@ export default function MovieScreen() {
             />
           </TouchableOpacity>
         </SafeAreaView>
-        <View>
-          <Image
-            source={require("../assets/images/moviePoster2.png")}
-            style={{ width, height: height * 0.55 }}
-          />
-          <LinearGradient
-            colors={[
-              "transparent",
-              "rgba(23, 23, 23, 0.8)",
-              "rgba(23, 23, 23, 1)",
-            ]}
-            style={{ width, height: height * 0.4 }}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            className="absolute bottom-0"
-          ></LinearGradient>
-        </View>
+
+        {loading ? (
+          <Loading />
+        ) : (
+          <View>
+            <Image
+              // source={require("../assets/images/moviePoster2.png")}
+              source={{
+                uri: image500(movie.poster_path) || fallBackMoviePoster,
+              }}
+              style={{ width, height: height * 0.55 }}
+            />
+            <LinearGradient
+              colors={[
+                "transparent",
+                "rgba(23, 23, 23, 0.8)",
+                "rgba(23, 23, 23, 1)",
+              ]}
+              style={{ width, height: height * 0.4 }}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              className="absolute bottom-0"
+            ></LinearGradient>
+          </View>
+        )}
       </View>
 
       {/* movie details */}
       <View style={{ marginTop: -(height * 0.09) }} className="space-y-3">
         {/* title */}
         <Text className="text-white text-center text-3xl font-bold">
-          {movieName}
+          {movie.title}
         </Text>
         {/* status, release, runtime */}
-        <Text className="text-neutral-400 font-semibold text-base text-center">
-          Released 2019 170 min
-        </Text>
+        {movie.id ? (
+          <Text className="text-neutral-400 font-semibold text-base text-center">
+            {movie.status} · {movie.release_date.split("-")[0]} ·{" "}
+            {movie.runtime} min
+          </Text>
+        ) : null}
 
         {/* genres */}
         <View className="flex-row justify-center mx-4 space-x-2">
-          <Text className="text-neutral-400 font-semibold text-base text-center">
-            Action
-          </Text>
-          <Text className="text-neutral-400 font-semibold text-base text-center">
-            Thrill
-          </Text>
-          <Text className="text-neutral-400 font-semibold text-base text-center">
-            Comedy
-          </Text>
+          {movie?.genres?.map((genre, index) => {
+            let showDot = index + 1 != movie.genres.lenght;
+            return (
+              <Text
+                className="text-neutral-400 font-semibold text-base text-center"
+                key={index}
+              >
+                {genre.name} {showDot ? "·" : null}
+              </Text>
+            );
+          })}
         </View>
 
         {/* description */}
         <Text className="text-neutral-400 mx-4 tracking-wide">
-          After the devastating events of Avengers: Infinity War (2018), the
-          universe is in ruins due to the efforts of the Mad Titan, Thanos. With
-          the help of remaining allies, the Avengers must assemble once more in
-          order to undo Thanos's actions and undo the chaos to the universe, no
-          matter what consequences may be in store, and no matter who they
-          face...
+          {movie?.overview}
         </Text>
       </View>
 
