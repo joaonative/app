@@ -27,8 +27,10 @@ export const image342 = (path) =>
 export const image185 = (path) =>
   path ? `https://image.tmdb.org/t/p/w185/${path}` : null;
 
-export const fallBackMoviePoster = "aaa";
-export const fallBackPersonImage = "aaa";
+export const fallBackMoviePoster =
+  "https://www.juliedray.com/wp-content/uploads/2022/01/sans-affiche.png";
+export const fallBackPersonImage =
+  "https://cdn.vectorstock.com/i/preview-1x/08/19/gray-photo-placeholder-icon-design-ui-vector-35850819.jpg";
 
 const apiCall = async (endpoint, params) => {
   const options = {
